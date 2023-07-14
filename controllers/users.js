@@ -1,7 +1,6 @@
 const { NODE_ENV, JWT_SECRET } = process.env;
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { ValidationError, CastError } = require('mongoose').Error;
 const userModel = require('../models/user');
 const { ERROR_CODE, ERROR_MESSAGE } = require('../utils/constants');
 const {
@@ -16,12 +15,7 @@ const getUserById = (req, res, next) => {
     .findById(req.user._id)
     .orFail(() => next(new NotFoundError(ERROR_MESSAGE.USER_NOT_FOUND)))
     .then((user) => res.send(user))
-    .catch((err) => {
-      if (err instanceof CastError) {
-        return next(new InaccurateDataError(ERROR_MESSAGE.USER_NOT_FOUND));
-      }
-      return next(err);
-    });
+    .catch(next);
 };
 
 const createUser = (req, res, next) => {
@@ -41,13 +35,13 @@ const createUser = (req, res, next) => {
       res.status(ERROR_CODE.CREATED).send(newUser);
     })
     .catch((err) => {
-      if (err.code === 11000) {
-        return next(new ConflictError(ERROR_MESSAGE.EMAIL_ALREADY_EXISTS));
+      if (err.name === 'ValidationError') {
+        next(new InaccurateDataError(ERROR_MESSAGE.WRONG_DATA_PROFILE));
+      } else if (err.code === 11000) {
+        next(new ConflictError(ERROR_MESSAGE.EMAIL_ALREADY_EXISTS));
+      } else {
+        next(err);
       }
-      if (err instanceof ValidationError) {
-        return next(new InaccurateDataError(ERROR_MESSAGE.WRONG_DATA_PROFILE));
-      }
-      return next(err);
     });
 };
 
@@ -63,10 +57,13 @@ const updateUser = (req, res, next) => {
     .orFail(() => next(new NotFoundError(ERROR_MESSAGE.USER_NOT_FOUND)))
     .then((user) => res.send(user))
     .catch((err) => {
-      if (err instanceof ValidationError) {
-        return next(new InaccurateDataError(ERROR_MESSAGE.WRONG_DATA_PROFILE));
+      if (err.name === 'ValidationError') {
+        next(new InaccurateDataError(ERROR_MESSAGE.WRONG_DATA_PROFILE));
+      } else if (err.code === 11000) {
+        next(new ConflictError(ERROR_MESSAGE.EMAIL_ALREADY_EXISTS));
+      } else {
+        next(err);
       }
-      return next(err);
     });
 };
 
