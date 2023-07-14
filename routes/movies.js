@@ -4,8 +4,8 @@ const {
   createMovie,
   deleteMovie,
 } = require('../controllers/movies');
-const auth = require('../middlewares/auth');
 const { movieIdValidate, movieValidate } = require('../middlewares/validation');
+const auth = require('../middlewares/auth');
 
 module.exports = router;
 

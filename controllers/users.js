@@ -1,3 +1,4 @@
+const { NODE_ENV, JWT_SECRET } = process.env;
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { ValidationError, CastError } = require('mongoose').Error;
@@ -8,8 +9,7 @@ const {
   ConflictError,
   NotFoundError,
 } = require('../errors/errors');
-
-const { NODE_ENV, JWT_SECRET } = process.env;
+const { devJwtKey } = require('../utils/config');
 
 const getUserById = (req, res, next) => {
   userModel
@@ -78,7 +78,7 @@ const login = (req, res, next) => {
     .then((user) => {
       const token = jwt.sign(
         { _id: user._id },
-        NODE_ENV === 'production' ? JWT_SECRET : 'super-strong-secret',
+        NODE_ENV === 'production' ? JWT_SECRET : devJwtKey,
         {
           expiresIn: '7d',
         },
