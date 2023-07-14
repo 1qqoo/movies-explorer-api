@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { ValidationError, CastError } = require('mongoose').Error;
 const userModel = require('../models/user');
-const { ERROR_CODE } = require('../utils/constants');
+const { ERROR_CODE, ERROR_MESSAGE } = require('../utils/constants');
 const {
   InaccurateDataError,
   ConflictError,
@@ -14,11 +14,11 @@ const { NODE_ENV, JWT_SECRET } = process.env;
 const getUserById = (req, res, next) => {
   userModel
     .findById(req.user._id)
-    .orFail(() => next(new NotFoundError('NotFound')))
+    .orFail(() => next(new NotFoundError(ERROR_MESSAGE.USER_NOT_FOUND)))
     .then((user) => res.send(user))
     .catch((err) => {
       if (err instanceof CastError) {
-        return next(new InaccurateDataError('Переданы некорректные данные'));
+        return next(new InaccurateDataError(ERROR_MESSAGE.USER_NOT_FOUND));
       }
       return next(err);
     });
@@ -36,25 +36,16 @@ const createUser = (req, res, next) => {
       }),
     )
     .then((user) => {
-      res.status(ERROR_CODE.CREATED).send({
-        name: user.name,
-        about: user.about,
-        avatar: user.avatar,
-        email: user.email,
-      });
+      const newUser = user.toObject();
+      delete newUser.password;
+      res.status(ERROR_CODE.CREATED).send(newUser);
     })
     .catch((err) => {
       if (err.code === 11000) {
-        return next(
-          new ConflictError('Пользователь с таким email уже существует'),
-        );
+        return next(new ConflictError(ERROR_MESSAGE.EMAIL_ALREADY_EXISTS));
       }
       if (err instanceof ValidationError) {
-        return next(
-          new InaccurateDataError(
-            'Переданы некорректные данные при создании пользователя',
-          ),
-        );
+        return next(new InaccurateDataError(ERROR_MESSAGE.WRONG_DATA_PROFILE));
       }
       return next(err);
     });
@@ -62,22 +53,18 @@ const createUser = (req, res, next) => {
 
 const updateUser = (req, res, next) => {
   const userId = req.user._id;
-  const { name, about } = req.body;
+  const { name, email } = req.body;
   userModel
     .findByIdAndUpdate(
       userId,
-      { name, about },
+      { name, email },
       { new: true, runValidators: true },
     )
-    .orFail(() => next(new NotFoundError('NotFound')))
+    .orFail(() => next(new NotFoundError(ERROR_MESSAGE.USER_NOT_FOUND)))
     .then((user) => res.send(user))
     .catch((err) => {
       if (err instanceof ValidationError) {
-        return next(
-          new InaccurateDataError(
-            'Переданы некорректные данные при обновлении профиля',
-          ),
-        );
+        return next(new InaccurateDataError(ERROR_MESSAGE.WRONG_DATA_PROFILE));
       }
       return next(err);
     });
