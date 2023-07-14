@@ -1,9 +1,13 @@
 const { celebrate, Joi } = require('celebrate');
 const validator = require('validator');
+const { ERROR_MESSAGE } = require('../utils/constants');
 
 const isURL = (value, helpers) =>
-  validator.isURL(value) ? value : helpers.message('Неккоректная ссылка');
+  validator.isURL(value)
+    ? value
+    : helpers.message(ERROR_MESSAGE.WRONG_URL_FORMAT);
 
+// POST /signin
 const signinValidate = celebrate({
   body: Joi.object().keys({
     email: Joi.string().required().email(),
@@ -11,26 +15,24 @@ const signinValidate = celebrate({
   }),
 });
 
+// POST /signup
 const signupValidate = celebrate({
   body: Joi.object().keys({
     email: Joi.string().required().email(),
     password: Joi.string().required().min(6),
-    name: Joi.string().min(2).max(30),
+    name: Joi.string().required().min(2).max(30),
   }),
 });
 
-const userIdValidate = celebrate({
-  params: Joi.object().keys({
-    userId: Joi.string().hex().required().length(24),
-  }),
-});
-
+// PATCH /users/me
 const userInfoValidate = celebrate({
   body: Joi.object().keys({
-    name: Joi.string().min(2).max(30).required(),
+    name: Joi.string().required().min(2).max(30),
+    email: Joi.string().required().email(),
   }),
 });
 
+// POST /movies
 const movieValidate = celebrate({
   body: Joi.object().keys({
     country: Joi.string().required(),
@@ -47,16 +49,16 @@ const movieValidate = celebrate({
   }),
 });
 
+// DELETE /movies/:movieId
 const movieIdValidate = celebrate({
   params: Joi.object().keys({
-    movieId: Joi.string().hex().required().length(24),
+    movieId: Joi.string().required().length(24).hex(),
   }),
 });
 
 module.exports = {
   signinValidate,
   signupValidate,
-  userIdValidate,
   userInfoValidate,
   movieValidate,
   movieIdValidate,
