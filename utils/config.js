@@ -5,7 +5,7 @@ const limiter = rateLimit({
   max: 100,
 });
 
-const devDatabaseUrl = 'mongodb://localhost:27017/moviesdb';
+const devDatabaseUrl = 'mongodb://localhost:27017/bitfilmsdb';
 
 const devJwtKey = 'dev-key';
 
