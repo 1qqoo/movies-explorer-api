@@ -11,7 +11,7 @@ const getMovies = (req, res, next) => {
   movieModel
     .find({})
     .populate('owner')
-    .then((movies) => res.send(movies))
+    .then((movies) => res.send(movies.reverse()))
     .catch(next);
 };
 
