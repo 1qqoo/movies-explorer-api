@@ -45,9 +45,7 @@ const createMovie = (req, res, next) => {
       nameEN,
       owner,
     })
-    .then((movie) =>
-      movie.then((popMovie) => res.status(ERROR_CODE.CREATED).send(popMovie)),
-    )
+    .then((movie) => res.status(ERROR_CODE.CREATED).send(movie))
     .catch((err) => {
       if (err instanceof ValidationError) {
         return next(new InaccurateDataError(ERROR_MESSAGE.WRONG_DATA_MOVIE));
